@@ -1,8 +1,10 @@
 
-[![Build Status](https://travis-ci.org/trayio/babel-plugin-webpack-alias.svg?branch=master)](https://travis-ci.org/trayio/babel-plugin-webpack-alias)
-[![Stable version](https://img.shields.io/npm/v/babel-plugin-webpack-alias.svg?style=flat)](https://www.npmjs.com/package/babel-plugin-webpack-alias)
+[![Build Status](https://travis-ci.org/sebinsua/babel-plugin-webpack-aliases.svg?branch=master)](https://travis-ci.org/sebinsua/babel-plugin-webpack-aliases)
+[![Stable version](https://img.shields.io/npm/v/babel-plugin-webpack-aliases.svg?style=flat)](https://www.npmjs.com/package/babel-plugin-webpack-aliases)
 
-# babel-plugin-webpack-alias
+# babel-plugin-webpack-aliases
+
+** This is a fork of `babel-plugin-webpack-alias` **
 
 This Babel 6 plugin allows you to use webpack aliases in Babel.
 
@@ -10,6 +12,7 @@ This plugin is simply going to take the aliases defined in your webpack config a
 
 ## Example
 With the following `webpack.config.js`:
+
 ```js
 module.exports = {
     ...
@@ -22,16 +25,21 @@ module.exports = {
     ...
 };
 ```
+
 A javascript file before compilation:
+
 ```js
 var MyModule = require('my-alias/src/lib/MyModule');
 import MyImport from 'library-name/lib/import/MyImport';
 ```
+
 will become:
+
 ```js
 var MyModule = require('../../alias-folder/js/lib/MyModule');
 import MyImport from '../../library-folder/folder/lib/import/MyImport';
 ```
+
 This is an example but the plugin will output the relative path depending on the position of the file and the alias folder.
 
 ## Install
@@ -41,7 +49,8 @@ npm install --save-dev babel-plugin-webpack-alias
 ```
 
 Add it as a plugin to your `.babelrc` file. You can optionally add a path to a config file, for example:
-```
+
+```json
 {
    "presets":[ "react", "es2015", "stage-0" ],
    "env": {
@@ -53,10 +62,12 @@ Add it as a plugin to your `.babelrc` file. You can optionally add a path to a c
   }
 }
 ```
+
 In this case, the plugin will only be run when `NODE_ENV` is set to `test`.
 
 It is also possible to pass a findConfig option, and the plugin will attempt to find the nearest configuration file within the project using [find-up](https://github.com/sindresorhus/find-up). For example:
-```
+
+```json
 {
    "presets":[ "react", "es2015", "stage-0" ],
    "env": {

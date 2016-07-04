@@ -45,7 +45,7 @@ This is an example but the plugin will output the relative path depending on the
 ## Install
 
 ```shell
-npm install --save-dev babel-plugin-webpack-alias
+npm install --save-dev babel-plugin-webpack-aliases
 ```
 
 Add it as a plugin to your `.babelrc` file. You can optionally add a path to a config file, for example:
@@ -56,7 +56,7 @@ Add it as a plugin to your `.babelrc` file. You can optionally add a path to a c
    "env": {
     "test": {
       "plugins": [
-        [ "babel-plugin-webpack-alias", { "config": "./webpack.config.test.js" } ]
+        [ "babel-plugin-webpack-aliases", { "config": "./webpack.config.test.js" } ]
       ]
     }
   }
@@ -73,7 +73,7 @@ It is also possible to pass a findConfig option, and the plugin will attempt to 
    "env": {
     "test": {
       "plugins": [
-        [ "babel-plugin-webpack-alias", {
+        [ "babel-plugin-webpack-aliases", {
             "config": "webpack.config.test.js",
             "findConfig": true
           } ]

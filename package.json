@@ -24,10 +24,12 @@
   "devDependencies": {
     "ava": "^0.14.0",
     "babel-core": "^6.6.0",
+    "babel-plugin-transform-es2015-block-scoping": "^6.10.1",
     "babel-plugin-transform-es2015-destructuring": "^6.6.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.6.0",
     "babel-plugin-transform-es2015-parameters": "^6.6.0",
     "babel-plugin-transform-es2015-spread": "^6.5.2",
+    "babel-plugin-transform-es2015-template-literals": "^6.8.0",
     "babel-plugin-transform-export-extensions": "^6.5.0",
     "babel-plugin-transform-object-rest-spread": "^6.5.0",
     "babel-plugin-transform-strict-mode": "^6.5.2",

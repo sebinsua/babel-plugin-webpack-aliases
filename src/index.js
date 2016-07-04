@@ -1,4 +1,3 @@
-
 import { join, resolve, relative, isAbsolute, dirname } from 'path';
 import { StringLiteral } from 'babel-types';
 import findUp from 'find-up';
@@ -10,7 +9,7 @@ function getConfig ({
     findConfig = false
 }) {
     // Get webpack config
-    let resolvedConfigPath = findConfig ? findUp.sync(configPath) : resolve(process.cwd(), configPath);
+    const resolvedConfigPath = findConfig ? findUp.sync(configPath) : resolve(process.cwd(), configPath);
 
     let requiredConfig = require(resolvedConfigPath);
     if (requiredConfig && requiredConfig.__esModule && requiredConfig.default) {
@@ -28,16 +27,14 @@ function getConfig ({
 function transformFilePathWithAliases (aliasConf, filePath, currentWorkingDirectory) {
     for (const aliasFrom in aliasConf) {
         if (aliasConf.hasOwnProperty(aliasFrom)) {
-            const aliasFromRegex = new RegExp(`^${aliasFrom}(\/|$)`);
-
-            const aliasTo = aliasConf[aliasFrom];
-
+            let aliasTo = aliasConf[aliasFrom];
             // If the filepath is not absolute, make it absolute
             if (!isAbsolute(aliasTo)) {
                 aliasTo = join(process.cwd(), aliasTo);
             }
 
             // If the regex matches, replace by the right config
+            const aliasFromRegex = new RegExp(`^${aliasFrom}(\/|$)`);
             if (aliasFromRegex.test(filePath)) {
                 let relativeAliasPath = relative(currentWorkingDirectory, aliasTo).replace(/\\/g, '/');
                 if (relativeAliasPath.length === 0) {
@@ -64,20 +61,20 @@ export default function transformImportsWithAliases ({ types: t }) {
                 }
             }) {
                 // Get webpack config
-                const conf = getConfig(opts);
+                const config = getConfig(opts);
 
                 // If the config comes back as null, we didn't find it, so throw an exception.
-                if (!conf) {
+                if (!config) {
                     throw new Error(`Cannot find configuration file: ${opts.config}`);
                 }
 
                 // Exit if there's no alias config
-                if (!conf.resolve || !conf.resolve.alias) {
+                if (!config.resolve || !config.resolve.alias) {
                     return;
                 }
 
                 // Get the webpack alias config
-                const aliasConf = conf.resolve.alias;
+                const aliasConf = config.resolve.alias;
 
                 const { source } = path.node;
                 // Exit if the import path is not a string literal
@@ -99,20 +96,20 @@ export default function transformImportsWithAliases ({ types: t }) {
                 }
             }) {
                 // Get webpack config
-                const conf = getConfig(opts);
+                const config = getConfig(opts);
 
                 // If the config comes back as null, we didn't find it, so throw an exception.
-                if (!conf) {
+                if (!config) {
                     throw new Error(`Cannot find configuration file: ${opts.config}`);
                 }
 
                 // Exit if there's no alias config
-                if (!conf.resolve || !conf.resolve.alias) {
+                if (!config.resolve || !config.resolve.alias) {
                     return;
                 }
 
                 // Get the webpack alias config
-                const aliasConf = conf.resolve.alias;
+                const aliasConf = config.resolve.alias;
 
                 const { callee: { name: calleeName }, arguments: args } = path.node;
                 // Exit if it's not a require statement

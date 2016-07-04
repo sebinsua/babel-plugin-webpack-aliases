@@ -13,7 +13,7 @@ function getConfig ({
     let resolvedConfigPath = findConfig ? findUp.sync(configPath) : resolve(process.cwd(), configPath);
 
     let requiredConfig = require(resolvedConfigPath);
-    if (requiredConfig && requiredConfig.__esModule) {
+    if (requiredConfig && requiredConfig.__esModule && requiredConfig.default) {
         requiredConfig = requiredConfig.default;
     }
 
@@ -26,42 +26,31 @@ function getConfig ({
 }
 
 function transformFilePathWithAliases (aliasConf, filePath, currentWorkingDirectory) {
-    let requiredFilePath = filePath;
-
-    for (let aliasFrom in aliasConf) {
+    for (const aliasFrom in aliasConf) {
         if (aliasConf.hasOwnProperty(aliasFrom)) {
-            let aliasTo = aliasConf[aliasFrom];
+            const aliasFromRegex = new RegExp(`^${aliasFrom}(\/|$)`);
+
+            const aliasTo = aliasConf[aliasFrom];
 
             // If the filepath is not absolute, make it absolute
             if (!isAbsolute(aliasTo)) {
                 aliasTo = join(process.cwd(), aliasTo);
             }
 
-            let regex = new RegExp(`^${aliasFrom}(\/|$)`);
-
             // If the regex matches, replace by the right config
-            if (regex.test(filePath)) {
-                let relativeFilePath = relative(currentWorkingDirectory, aliasTo).replace(/\\/g, '/');
-
-                // In case the file path is the root of the alias, need to put a dot to avoid having an absolute path
-                if (relativeFilePath.length === 0) {
-                    relativeFilePath = '.';
+            if (aliasFromRegex.test(filePath)) {
+                let relativeAliasPath = relative(currentWorkingDirectory, aliasTo).replace(/\\/g, '/');
+                if (relativeAliasPath.length === 0) {
+                    relativeAliasPath = '.';
                 }
 
-                requiredFilePath = filePath.replace(aliasFrom, relativeFilePath);
-
-                // In the unfortunate case of a file requiring the current directory which is the alias, we need to add
-                // an extra slash
-                if (requiredFilePath === '.') {
-                    requiredFilePath = './';
-                }
-
-                return requiredFilePath;
+                const aliasFilePath = filePath.replace(aliasFrom, relativeAliasPath);
+                return aliasFilePath.charAt(0) === '.' ? aliasFilePath : `./${aliasFilePath}`;
             }
         }
     }
 
-    return requiredFilePath;
+    return filePath;
 }
 
 export default function transformImportsWithAliases ({ types: t }) {
@@ -78,7 +67,7 @@ export default function transformImportsWithAliases ({ types: t }) {
                 const conf = getConfig(opts);
 
                 // If the config comes back as null, we didn't find it, so throw an exception.
-                if (conf === null) {
+                if (!conf) {
                     throw new Error(`Cannot find configuration file: ${opts.config}`);
                 }
 
@@ -113,7 +102,7 @@ export default function transformImportsWithAliases ({ types: t }) {
                 const conf = getConfig(opts);
 
                 // If the config comes back as null, we didn't find it, so throw an exception.
-                if (conf === null) {
+                if (!conf) {
                     throw new Error(`Cannot find configuration file: ${opts.config}`);
                 }
 

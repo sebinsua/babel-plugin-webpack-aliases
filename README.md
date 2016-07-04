@@ -4,7 +4,7 @@
 
 # babel-plugin-webpack-aliases
 
-** This is a fork of `babel-plugin-webpack-alias` **
+*This is a fork of `babel-plugin-webpack-alias`*
 
 This Babel 6 plugin allows you to use webpack aliases in Babel.
 

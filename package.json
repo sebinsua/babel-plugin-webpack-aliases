@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "babel-plugin-webpack-aliases",
   "description": "Babel plugin which allows to use webpack aliases",
   "main": "build/index.js",

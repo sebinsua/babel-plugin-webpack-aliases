@@ -67,3 +67,10 @@ test('throw an exception when we cant find the config', t => {
         findConfig: true
     }));
 });
+
+test('using config path from project root', t => {
+    t.notThrows(() => transformFile('fixtures/basic.absolute.js', {
+        config: "test/runtime.webpack.config.js",
+        findConfig: true
+    }));
+});

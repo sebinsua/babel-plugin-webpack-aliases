@@ -9,7 +9,18 @@ function getConfig ({
     findConfig = false
 }) {
     // Get webpack config
-    const resolvedConfigPath = findConfig ? findUp.sync(configPath) : resolve(process.cwd(), configPath);
+    let resolvedConfigPath = null;
+    if (findConfig) {
+        // Try to find a relative copy first
+        resolvedConfigPath = findUp.sync(configPath);
+
+        // Otherwise try relative to project root
+        if (resolvedConfigPath === null) {
+            resolvedConfigPath = resolve(dirname(findUp.sync('package.json')), configPath);
+        }
+    } else {
+        resolvedConfigPath = resolve(process.cwd(), configPath);
+    }
 
     let requiredConfig = require(resolvedConfigPath);
     if (requiredConfig && requiredConfig.__esModule && requiredConfig.default) {

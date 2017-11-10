@@ -1,128 +1,185 @@
-import { join, resolve, relative, isAbsolute, dirname } from 'path';
-import { StringLiteral } from 'babel-types';
-import findUp from 'find-up';
+import { join, resolve, relative, isAbsolute, dirname } from 'path'
+import { StringLiteral } from 'babel-types'
+import findUp from 'find-up'
 
-const DEFAULT_WEBPACK_PATH = 'webpack.config.js';
+const DEFAULT_WEBPACK_PATH = 'webpack.config.js'
+const PACKAGE_JSON_PATH = 'package.json'
 
-function getConfig ({
+const packageJson = require(findUp.sync(PACKAGE_JSON_PATH))
+const dependencies = Object.keys(
+    Object.assign(
+        {},
+        packageJson.dependencies || {},
+        packageJson.peerDependencies || {},
+        packageJson.devDependencies
+    )
+)
+
+function getConfig({
     config: configPath = DEFAULT_WEBPACK_PATH,
     findConfig = false
 }) {
     // Get webpack config
-    const resolvedConfigPath = findConfig ? findUp.sync(configPath) : resolve(process.cwd(), configPath);
+    const resolvedConfigPath = findConfig
+        ? findUp.sync(resolve(configPath))
+        : resolve(configPath)
 
-    let requiredConfig = require(resolvedConfigPath);
+    let requiredConfig = require(resolvedConfigPath)
     if (requiredConfig && requiredConfig.__esModule && requiredConfig.default) {
-        requiredConfig = requiredConfig.default;
+        requiredConfig = requiredConfig.default
     }
 
-    let config = requiredConfig;
+    let config = requiredConfig
     if (typeof requiredConfig === 'function') {
-        config = requiredConfig(process.env.NODE_ENV);
+        config = requiredConfig(process.env.NODE_ENV)
     }
 
-    return config;
+    return config
 }
 
-function transformFilePathWithAliases (aliasConf, filePath, currentWorkingDirectory) {
+function transformFilePathWithAliases(
+    aliasConf,
+    filePath,
+    currentWorkingDirectory
+) {
     for (const aliasFrom in aliasConf) {
         if (aliasConf.hasOwnProperty(aliasFrom)) {
-            let aliasTo = aliasConf[aliasFrom];
-            // If the filepath is not absolute, make it absolute
-            if (!isAbsolute(aliasTo)) {
-                aliasTo = join(process.cwd(), aliasTo);
-            }
+            let aliasTo = aliasConf[aliasFrom]
 
             // If the regex matches, replace by the right config
-            const aliasFromRegex = new RegExp(`^${aliasFrom}(\/|$)`);
+            const aliasFromRegex = new RegExp(`^${aliasFrom}(\/|$)`)
             if (aliasFromRegex.test(filePath)) {
-                let relativeAliasPath = relative(currentWorkingDirectory, aliasTo).replace(/\\/g, '/');
-                if (relativeAliasPath.length === 0) {
-                    relativeAliasPath = '.';
+                if (dependencies.includes(aliasTo)) {
+                    return aliasTo
                 }
 
-                const aliasFilePath = filePath.replace(aliasFrom, relativeAliasPath);
-                return aliasFilePath.charAt(0) === '.' ? aliasFilePath : `./${aliasFilePath}`;
+                // If the filepath is not absolute, make it absolute
+                if (!isAbsolute(aliasTo)) {
+                    aliasTo = join(process.cwd(), aliasTo)
+                }
+
+                let relativeAliasPath = relative(
+                    currentWorkingDirectory,
+                    aliasTo
+                ).replace(/\\/g, '/')
+
+                if (relativeAliasPath.length === 0) {
+                    relativeAliasPath = '.'
+                }
+
+                const aliasFilePath = filePath.replace(
+                    aliasFrom,
+                    relativeAliasPath
+                )
+
+                return aliasFilePath.charAt(0) === '.'
+                    ? aliasFilePath
+                    : `./${aliasFilePath}`
             }
         }
     }
 
-    return filePath;
+    return filePath
 }
 
-export default function transformImportsWithAliases ({ types: t }) {
+export default function transformImportsWithAliases({ types: t }) {
     return {
         visitor: {
-            ImportDeclaration(path, {
-                file: { opts: { filename } },
-                opts = {
-                    config: DEFAULT_WEBPACK_PATH,
-                    findConfig: false
+            ImportDeclaration(
+                path,
+                {
+                    file: { opts: { filename } },
+                    opts = {
+                        config: DEFAULT_WEBPACK_PATH,
+                        findConfig: false
+                    }
                 }
-            }) {
+            ) {
                 // Get webpack config
-                const config = getConfig(opts);
+                const config = getConfig(opts)
 
                 // If the config comes back as null, we didn't find it, so throw an exception.
                 if (!config) {
-                    throw new Error(`Cannot find configuration file: ${opts.config}`);
+                    throw new Error(
+                        `Cannot find configuration file: ${opts.config}`
+                    )
                 }
 
                 // Exit if there's no alias config
                 if (!config.resolve || !config.resolve.alias) {
-                    return;
+                    return
                 }
 
                 // Get the webpack alias config
-                const aliasConf = config.resolve.alias;
+                const aliasConf = config.resolve.alias
 
-                const { source } = path.node;
+                const { source } = path.node
                 // Exit if the import path is not a string literal
                 if (!t.isStringLiteral(source)) {
-                    return;
+                    return
                 }
 
                 // Get the path of the StringLiteral
-                const originalFilePath = source.value;
-                const requiredFilePath = transformFilePathWithAliases(aliasConf, originalFilePath, dirname(filename));
+                const originalFilePath = source.value
+                const requiredFilePath = transformFilePathWithAliases(
+                    aliasConf,
+                    originalFilePath,
+                    dirname(filename)
+                )
 
-                path.node.source = StringLiteral(requiredFilePath);
+                path.node.source = StringLiteral(requiredFilePath)
             },
-            CallExpression(path, {
-                file: { opts: { filename } },
-                opts = {
-                    config: DEFAULT_WEBPACK_PATH,
-                    findConfig: false
+            CallExpression(
+                path,
+                {
+                    file: { opts: { filename } },
+                    opts = {
+                        config: DEFAULT_WEBPACK_PATH,
+                        findConfig: false
+                    }
                 }
-            }) {
+            ) {
                 // Get webpack config
-                const config = getConfig(opts);
+                const config = getConfig(opts)
 
                 // If the config comes back as null, we didn't find it, so throw an exception.
                 if (!config) {
-                    throw new Error(`Cannot find configuration file: ${opts.config}`);
+                    throw new Error(
+                        `Cannot find configuration file: ${opts.config}`
+                    )
                 }
 
                 // Exit if there's no alias config
                 if (!config.resolve || !config.resolve.alias) {
-                    return;
+                    return
                 }
 
                 // Get the webpack alias config
-                const aliasConf = config.resolve.alias;
+                const aliasConf = config.resolve.alias
 
-                const { callee: { name: calleeName }, arguments: args } = path.node;
+                const {
+                    callee: { name: calleeName },
+                    arguments: args
+                } = path.node
                 // Exit if it's not a require statement
-                if (calleeName !== 'require' || !args.length || !t.isStringLiteral(args[0])) {
-                    return;
+                if (
+                    calleeName !== 'require' ||
+                    !args.length ||
+                    !t.isStringLiteral(args[0])
+                ) {
+                    return
                 }
 
                 // Get the path of the StringLiteral
-                const originalFilePath = args[0].value;
-                const requiredFilePath = transformFilePathWithAliases(aliasConf, originalFilePath, dirname(filename));
+                const originalFilePath = args[0].value
+                const requiredFilePath = transformFilePathWithAliases(
+                    aliasConf,
+                    originalFilePath,
+                    dirname(filename)
+                )
 
-                path.node.arguments = [ StringLiteral(requiredFilePath) ];
+                path.node.arguments = [StringLiteral(requiredFilePath)]
             }
         }
-    };
+    }
 }

@@ -11,7 +11,7 @@ const dependencies = Object.keys(
         {},
         packageJson.dependencies || {},
         packageJson.peerDependencies || {},
-        packageJson.devDependencies
+        packageJson.devDependencies || {}
     )
 )
 
@@ -21,8 +21,8 @@ function getConfig({
 }) {
     // Get webpack config
     const resolvedConfigPath = findConfig
-        ? findUp.sync(resolve(configPath))
-        : resolve(configPath)
+        ? findUp.sync(configPath)
+        : resolve(process.cwd(), configPath)
 
     let requiredConfig = require(resolvedConfigPath)
     if (requiredConfig && requiredConfig.__esModule && requiredConfig.default) {

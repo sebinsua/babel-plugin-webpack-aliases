@@ -13,20 +13,6 @@ globals:
     __debug: false
     _: false
 
-arrowFunctions: true
-blockBindings: true
-classes: true
-defaultParams: true
-destructuring: true
-forOf: true
-generators: true
-modules: true
-objectLiteralComputedProperties: true
-objectLiteralShorthandMethods: true
-objectLiteralShorthandProperties: true
-spread: true
-templateStrings: true
-
 rules:
     # ERRORS
     brace-style: [2, 1tbs, allowSingleLine: true]

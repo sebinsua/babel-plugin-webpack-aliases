@@ -50,7 +50,7 @@ function transformFilePathWithAliases(
             const aliasFromRegex = new RegExp(`^${aliasFrom}(\/|$)`)
             if (aliasFromRegex.test(filePath)) {
                 if (dependencies.includes(aliasTo)) {
-                    return aliasTo
+                    return filePath.replace(aliasFrom, aliasTo)
                 }
 
                 // If the filepath is not absolute, make it absolute

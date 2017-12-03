@@ -1,5 +1,12 @@
 import { join, resolve, relative, isAbsolute, dirname } from 'path'
-import { StringLiteral } from 'babel-types'
+import {
+    StringLiteral,
+    variableDeclaration,
+    variableDeclarator,
+    memberExpression,
+    identifier,
+    stringLiteral
+} from 'babel-types'
 import findUp from 'find-up'
 
 const DEFAULT_WEBPACK_PATH = 'webpack.config.js'
@@ -82,6 +89,25 @@ function transformFilePathWithAliases(
     return filePath
 }
 
+function createWindowExternal(namespace, importNames, external) {
+    return variableDeclaration('var', [
+        variableDeclarator(
+            importNames.length > 1
+                ? identifier(importNames)
+                : identifier(importNames),
+            memberExpression(
+                memberExpression(
+                    identifier('window'),
+                    stringLiteral(namespace),
+                    true
+                ),
+                stringLiteral(external),
+                true
+            )
+        )
+    ])
+}
+
 export default function transformImportsWithAliases({ types: t }) {
     return {
         visitor: {
@@ -121,13 +147,31 @@ export default function transformImportsWithAliases({ types: t }) {
 
                 // Get the path of the StringLiteral
                 const originalFilePath = source.value
-                const requiredFilePath = transformFilePathWithAliases(
-                    aliasConf,
-                    originalFilePath,
-                    dirname(filename)
-                )
 
-                path.node.source = StringLiteral(requiredFilePath)
+                const isExternal = true
+                if (isExternal === false) {
+                    const requiredFilePath = transformFilePathWithAliases(
+                        aliasConf,
+                        originalFilePath,
+                        dirname(filename)
+                    )
+
+                    path.node.source = StringLiteral(requiredFilePath)
+                } else {
+                    // TODO: This should only happen when there is an external in the config,
+                    //       and then it should happen as expected.
+                    //       Also, we should handle destructuring partially at least.
+                    const importNames = path.node.specifiers.map(
+                        s => s.local.name
+                    )
+                    path.replaceWith(
+                        createWindowExternal(
+                            'namespace',
+                            importNames,
+                            originalFilePath
+                        )
+                    )
+                }
             },
             CallExpression(
                 path,
@@ -172,13 +216,28 @@ export default function transformImportsWithAliases({ types: t }) {
 
                 // Get the path of the StringLiteral
                 const originalFilePath = args[0].value
-                const requiredFilePath = transformFilePathWithAliases(
-                    aliasConf,
-                    originalFilePath,
-                    dirname(filename)
-                )
 
-                path.node.arguments = [StringLiteral(requiredFilePath)]
+                const isExternal = true
+                if (isExternal === false) {
+                    const requiredFilePath = transformFilePathWithAliases(
+                        aliasConf,
+                        originalFilePath,
+                        dirname(filename)
+                    )
+
+                    path.node.arguments = [StringLiteral(requiredFilePath)]
+                } else {
+                    const importNames = path
+                        .find(p => p.isVariableDeclaration())
+                        .node.declarations.map(d => d.id.name)
+                    path.replaceWith(
+                        createWindowExternal(
+                            'namespace',
+                            importNames,
+                            originalFilePath
+                        )
+                    )
+                }
             }
         }
     }

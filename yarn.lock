@@ -175,7 +175,7 @@ ava-init@^0.1.0:
     the-argv "^1.0.0"
     write-pkg "^1.0.0"
 
-ava@0.15.2:
+ava@^0.15.2:
   version "0.15.2"
   resolved "https://registry.yarnpkg.com/ava/-/ava-0.15.2.tgz#514bb5d86a71b0294351f803a13ddb0c27c7bb62"
   dependencies:

@@ -76,6 +76,14 @@ test('aliasing a dependency', t => {
     t.is(actual, expected)
 })
 
+test.only('externals', t => {
+    const actual = transformFile('fixtures/externals.js', {
+        config: './runtime.webpack.config.js'
+    })
+    const expected = read('fixtures/externals.expected.js')
+    t.is(actual, expected)
+})
+
 test('dont throw an exception if the config is found', t => {
     t.notThrows(() =>
         transformFile('fixtures/basic.absolute.js', {

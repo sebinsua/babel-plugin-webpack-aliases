@@ -8,5 +8,15 @@ module.exports = {
             'my-root-folder-lib': './fixtures/',
             'alias-of-a-dependency': 'find-up'
         }
+    },
+    externals: {
+        'special-outside-messaging-one': [
+            'namespace',
+            'special-outside-messaging-1'
+        ],
+        'special-outside-messaging-two': [
+            'namespace',
+            'special-outside-messaging-2'
+        ]
     }
 }
